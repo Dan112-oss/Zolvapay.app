@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — ZolvaPay</title>
+<meta name="description" content="Log in to your ZolvaPay account to send, receive, and convert money across currencies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* ---------- Auth pages (login/signup) — scoped additions ---------- */
+  .auth-main {
+    min-height: calc(100vh - 73px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 40px 36px;
+  }
+
+  .auth-header { text-align: center; margin-bottom: 32px; }
+  .auth-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .auth-header p {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(20, 155, 126, 0.15);
+  }
+  .form-group input.input-error { border-color: #D9483B; }
+
+  .field-error {
+    display: none;
+    font-size: 12px;
+    color: #D9483B;
+    margin-top: 6px;
+  }
+  .field-error.visible { display: block; }
+
+  .form-row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+  .remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+  }
+  .remember-me input { width: auto; }
+  .forgot-link { color: var(--teal); font-weight: 600; }
+  .forgot-link:hover { color: var(--teal-light); }
+
+  .btn-block { width: 100%; }
+
+  .auth-alert {
+    display: none;
+    background: rgba(217, 72, 59, 0.08);
+    border: 1px solid rgba(217, 72, 59, 0.25);
+    color: #D9483B;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+  }
+  .auth-alert.visible { display: block; }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .auth-divider::before,
+  .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .auth-footer {
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .auth-footer a { color: var(--teal); font-weight: 600; }
+  .auth-footer a:hover { color: var(--teal-light); }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home">
+      <img src="../images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img">
+    </a>
+    <div class="navbar-actions">
+      
+      <a href="signup.html" class="btn btn-ghost">Open account</a>
+    </div>
+  </div>
+</header>
+
+<main class="auth-main">
+  <div class="auth-card">
+
+    <div class="auth-header">
+      <h1>Welcome back</h1>
+      <p>Log in to send, receive, and convert money.</p>
+    </div>
+
+    <div class="auth-alert" id="formAlert" role="alert"></div>
+
+    <form id="loginForm" novalidate>
+
+      <div class="form-group">
+        <label for="email">Email or phone number</label>
+        <input type="text" id="email" name="email" placeholder="you@example.com" autocomplete="username" required>
+        <p class="field-error" id="emailError">Enter a valid email or phone number.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+        <p class="field-error" id="passwordError">Password is required.</p>
+      </div>
+
+      <div class="form-row-between">
+        <label class="remember-me">
+          <input type="checkbox" id="rememberMe" name="rememberMe">
+          Remember me
+        </label>
+        <a href="#" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" id="loginSubmit">Log in</button>
+    </form>
+
+    <div class="auth-divider">OR</div>
+
+    <p class="auth-footer">
+      Don't have an account? <a href="signup.html">Sign up free</a>
+    </p>
+
+  </div>
+</main>
+
+<script src="js/main.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

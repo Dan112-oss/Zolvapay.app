@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — ZolvaPay</title>
+<meta name="description" content="Your ZolvaPay dashboard — balances, transfers, and recent activity.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/auth.js"></script>
+<script>
+  // Fast client-side check: if there's no token at all, redirect before
+  // paint. This does NOT confirm the token is still valid server-side —
+  // that authoritative check happens against /api/auth/me further down,
+  // once the DOM (and ZolvaAuth) is ready.
+  (function () {
+    if (!window.ZolvaAuth || !window.ZolvaAuth.getToken()) {
+      window.location.href = "login.html";
+    }
+  })();
+</script>
+<style>
+  /* ---------- Dashboard layout ---------- */
+  body {
+    background: var(--surface);
+    padding-bottom: 84px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  body.auth-ready { opacity: 1; }
+
+  .dash-navbar-inner { padding-top: 14px; padding-bottom: 14px; }
+  .dash-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dash-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .dash-greeting { font-size: 12px; color: var(--muted); }
+  .dash-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--navy); }
+
+  .dash-actions-right { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    color: var(--navy);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .icon-btn:hover { background: var(--border); }
+
+  .dash-main { padding: 28px 0 40px; max-width: 640px; margin: 0 auto; }
+
+  /* ---------- Balance card ---------- */
+  .balance-hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    border-radius: var(--radius-lg);
+    padding: 28px 26px;
+    color: var(--white);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .balance-hero::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(20, 155, 126, 0.18);
+  }
+  .balance-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 26px;
+    position: relative;
+    z-index: 1;
+  }
+  .balance-hero-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
+  .balance-hero-badge {
+    font-size: 11px;
+    background: rgba(255,255,255,0.12);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .balance-hero-label { font-size: 12px; opacity: 0.7; margin-bottom: 6px; position: relative; z-index: 1; }
+  .balance-hero-amount {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .balance-hero-currency { font-size: 12px; opacity: 0.65; position: relative; z-index: 1; }
+
+  /* ---------- Insight card ---------- */
+  .insight-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .insight-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(20, 155, 126, 0.12);
+    color: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .insight-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .insight-sub { font-size: 12px; color: var(--muted); }
+
+  /* ---------- KYC banner ---------- */
+  .kyc-banner {
+    display: none;
+    background: rgba(230, 160, 30, 0.08);
+    border: 1px solid rgba(230, 160, 30, 0.3);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .kyc-banner.visible { display: flex; }
+  .kyc-banner-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(230, 160, 30, 0.15);
+    color: #C6890F;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .kyc-banner-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .kyc-banner-sub { font-size: 12px; color: var(--muted); }
+  .kyc-banner-action { margin-left: auto; flex-shrink: 0; }
+
+  /* ---------- Quick actions ---------- */
+  .dash-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .quick-actions-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .quick-action-btn {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .quick-action-btn:hover { box-shadow: var(--shadow-soft); transform: translateY(-2px); }
+  .quick-action-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    color: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+
+  /* ---------- Transactions (empty state) ---------- */
+  .tx-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .tx-empty-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    color: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin: 0 auto 16px;
+  }
+  .tx-empty-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--navy); margin-bottom: 6px; }
+  .tx-empty-sub { font-size: 13px; color: var(--muted); max-width: 320px; margin: 0 auto 20px; }
+
+  /* ---------- Recent activity list (Phase 3) ---------- */
+  .recent-tx-list { display: flex; flex-direction: column; gap: 8px; }
+  .tx-row {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tx-row-icon {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .tx-row-icon.in { background: rgba(20, 155, 126, 0.12); color: var(--teal); }
+  .tx-row-icon.out { background: rgba(230, 160, 30, 0.12); color: #C6890F; }
+  .tx-row-body { flex: 1; min-width: 0; }
+  .tx-row-title { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .tx-row-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .tx-row-amount { font-family: var(--font-display); font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .tx-row-amount.in { color: var(--teal); }
+  .tx-row-amount.out { color: var(--navy); }
+
+  /* ---------- Bottom nav (mobile) ---------- */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 6px;
+    z-index: 40;
+  }
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+  }
+  .bottom-nav-item.active { color: var(--teal); }
+  .bottom-nav-icon { font-size: 18px; }
+
+  @media (max-width: 480px) {
+    .dash-main { padding: 20px 16px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner dash-navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home">
+      <img src="images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img">
+    </a>
+    <div class="dash-actions-right">
+      <a class="icon-btn" id="adminQueueBtn" href="admin/kyc-queue.html" title="KYC queue" aria-label="KYC queue" style="display:none; text-decoration:none;"><i class="fa-solid fa-user-shield"></i></a>
+      <div class="icon-btn" title="Notifications" aria-label="Notifications"><i class="fa-solid fa-bell"></i></div>
+      <div class="dash-user">
+        <div class="dash-avatar" id="userAvatar">Z</div>
+      </div>
+      <button class="icon-btn" id="logoutBtn" title="Log out" aria-label="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+
+  <p class="dash-greeting" id="greetingLabel">Good morning,</p>
+  <p class="dash-name" id="greetingName" style="margin-bottom: 20px;">Loading&hellip;</p>
+
+  <div class="kyc-banner" id="kycBanner">
+    <div class="kyc-banner-icon"><i class="fa-solid fa-id-card"></i></div>
+    <div>
+      <p class="kyc-banner-title">Verify your identity</p>
+      <p class="kyc-banner-sub">Complete Tier 1 verification to unlock transfers and conversions.</p>
+    </div>
+    <a href="verify-identity.html" class="btn btn-primary kyc-banner-action">Verify now</a>
+  </div>
+
+  <section class="balance-hero">
+    <div class="balance-hero-top">
+      <span class="balance-hero-name" id="cardName">&nbsp;</span>
+      <span class="balance-hero-badge">Main wallet</span>
+    </div>
+    <p class="balance-hero-label">Total balance</p>
+    <p class="balance-hero-amount" id="balanceAmount">$0.00</p>
+    <p class="balance-hero-currency" id="balanceSub">Fund your wallet to get started</p>
+  </section>
+
+  <div class="insight-card">
+    <div class="insight-icon"><i class="fa-solid fa-chart-line"></i></div>
+    <div>
+      <p class="insight-title">Insights arrive after your first transaction</p>
+      <p class="insight-sub">Spending trends and balance history will show up here.</p>
+    </div>
+  </div>
+
+  <p class="dash-section-title">Quick actions</p>
+  <div class="quick-actions-row">
+    <a href="transfer.html" class="quick-action-btn" style="text-decoration:none;">
+      <div class="quick-action-icon"><i class="fa-solid fa-right-left"></i></div>
+      Transfer
+    </a>
+    <a href="convert.html" class="quick-action-btn" style="text-decoration:none;">
+      <div class="quick-action-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+      Convert
+    </a>
+    <a href="fund.html" class="quick-action-btn" style="text-decoration:none;">
+      <div class="quick-action-icon"><i class="fa-solid fa-plus"></i></div>
+      Top up
+    </a>
+    <a href="withdraw.html" class="quick-action-btn" style="text-decoration:none;">
+      <div class="quick-action-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+      Withdraw
+    </a>
+  </div>
+
+  <a href="cards.html" class="insight-card" style="text-decoration:none; cursor:pointer;">
+    <div class="insight-icon"><i class="fa-solid fa-credit-card"></i></div>
+    <div>
+      <p class="insight-title">My cards</p>
+      <p class="insight-sub">Issue a virtual card and manage spend limits.</p>
+    </div>
+  </a>
+
+  <a href="bills.html" class="insight-card" style="text-decoration:none; cursor:pointer;">
+    <div class="insight-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+    <div>
+      <p class="insight-title">Pay bills</p>
+      <p class="insight-sub">Airtime, electricity, and TV from your wallet.</p>
+    </div>
+  </a>
+
+  <a href="savings.html" class="insight-card" style="text-decoration:none; cursor:pointer;">
+    <div class="insight-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+    <div>
+      <p class="insight-title">Savings</p>
+      <p class="insight-sub">Set a goal and earn interest while you save.</p>
+    </div>
+  </a>
+
+  <a href="loans.html" class="insight-card" style="text-decoration:none; cursor:pointer;">
+    <div class="insight-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+    <div>
+      <p class="insight-title">Loans</p>
+      <p class="insight-sub">Check your eligibility and apply in minutes.</p>
+    </div>
+  </a>
+
+  <div class="dash-section-title" style="display:flex; justify-content:space-between; align-items:center;">
+    <span>Recent activity</span>
+    <a href="activity.html" style="text-transform:none; letter-spacing:0; font-weight:600; color:var(--teal); text-decoration:none;">View all</a>
+  </div>
+  <div id="recentActivityWrap">
+    <div class="tx-card" id="recentActivityEmpty">
+      <div class="tx-empty-icon"><i class="fa-solid fa-receipt"></i></div>
+      <p class="tx-empty-title">No transactions yet</p>
+      <p class="tx-empty-sub">Once you send, receive, or convert money, your activity will show up here.</p>
+      <a href="transfer.html" class="btn btn-primary">Make your first transfer</a>
+    </div>
+    <div class="recent-tx-list" id="recentActivityList" style="display:none;"></div>
+  </div>
+
+</main>
+
+<nav class="bottom-nav" aria-label="Primary">
+  <div class="bottom-nav-item active">
+    <span class="bottom-nav-icon"><i class="fa-solid fa-house"></i></span>
+    Home
+  </div>
+  <a href="activity.html" class="bottom-nav-item" style="text-decoration:none;">
+    <span class="bottom-nav-icon"><i class="fa-solid fa-chart-simple"></i></span>
+    Activity
+  </a>
+  <a href="transfer.html" class="bottom-nav-item" style="text-decoration:none;">
+    <span class="bottom-nav-icon"><i class="fa-solid fa-money-bill-transfer"></i></span>
+    Pay
+  </a>
+  <div class="bottom-nav-item" title="Coming in a later phase">
+    <span class="bottom-nav-icon"><i class="fa-solid fa-credit-card"></i></span>
+    Cards
+  </div>
+  <div class="bottom-nav-item" title="Coming in a later phase">
+    <span class="bottom-nav-icon"><i class="fa-solid fa-user"></i></span>
+    Profile
+  </div>
+</nav>
+
+<script src="js/main.js"></script>
+<script>
+  (async function () {
+    const user = await window.ZolvaAuth.fetchCurrentUser();
+
+    if (!user) {
+      // Token was missing/invalid/expired — fetchCurrentUser already
+      // cleared it. Send the visitor back to login.
+      window.location.href = "login.html";
+      return;
+    }
+
+    const displayName = user.name || user.email;
+    const initial = displayName.trim().charAt(0).toUpperCase();
+
+    document.getElementById("greetingName").textContent = displayName;
+    document.getElementById("cardName").textContent = displayName.toUpperCase();
+    document.getElementById("userAvatar").textContent = initial;
+
+    if (!user.kyc_tier || user.kyc_tier < 1) {
+      document.getElementById("kycBanner").classList.add("visible");
+    }
+
+    if (user.role === "admin" || user.role === "super_admin") {
+      document.getElementById("adminQueueBtn").style.display = "flex";
+    }
+
+    // Phase 2: real wallet balance. Read-only — no transfer/convert UI
+    // yet, so this just replaces the $0.00 placeholder.
+    (async function loadWalletBalance() {
+      try {
+        const token = window.ZolvaAuth.getToken();
+        const response = await fetch("/api/wallet", {
+          headers: { "Authorization": "Bearer " + token, "Accept": "application/json" },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+
+        if (data.balances && data.balances.length > 0) {
+          const primary = data.balances[0];
+          const formatted = primary.available_balance.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+          document.getElementById("balanceAmount").textContent = formatted;
+          document.getElementById("balanceSub").textContent = primary.currency_code;
+        }
+      } catch (e) {
+        // Leave the placeholder in place — this is a nice-to-have, not
+        // something that should block the rest of the dashboard.
+      }
+    })();
+
+    // Phase 3: real recent activity (top 3), replacing the static empty
+    // state. Reuses the same .tx-row markup/classes as activity.html so
+    // the two pages look consistent.
+    (async function loadRecentActivity() {
+      const emptyEl = document.getElementById("recentActivityEmpty");
+      const listEl = document.getElementById("recentActivityList");
+
+      function titleFor(tx) {
+        if (tx.direction === "sent") return "Sent to " + tx.counterparty_name;
+        if (tx.direction === "received") return "Received from " + tx.counterparty_name;
+        if (tx.direction === "credit") return "Wallet credited";
+        return "Wallet debited";
+      }
+
+      function isIncoming(tx) {
+        return tx.direction === "received" || tx.direction === "credit";
+      }
+
+      function formatDate(isoString) {
+        return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      }
+
+      try {
+        const token = window.ZolvaAuth.getToken();
+        const response = await fetch("/api/transactions", {
+          headers: { "Authorization": "Bearer " + token, "Accept": "application/json" },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const rows = (data.data || []).slice(0, 3);
+
+        if (rows.length === 0) return; // leave the empty state showing
+
+        rows.forEach(function (tx) {
+          const incoming = isIncoming(tx);
+          const amountFormatted = tx.amount.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+
+          const row = document.createElement("div");
+          row.className = "tx-row";
+          row.innerHTML =
+            '<div class="tx-row-icon ' + (incoming ? "in" : "out") + '">' +
+              '<i class="fa-solid ' + (incoming ? "fa-arrow-down" : "fa-arrow-up") + '"></i>' +
+            "</div>" +
+            '<div class="tx-row-body">' +
+              '<div class="tx-row-title"></div>' +
+              '<div class="tx-row-sub"></div>' +
+            "</div>" +
+            '<div class="tx-row-amount ' + (incoming ? "in" : "out") + '">' +
+              (incoming ? "+" : "-") + amountFormatted + " " + tx.currency_code +
+            "</div>";
+
+          row.querySelector(".tx-row-title").textContent = titleFor(tx);
+          row.querySelector(".tx-row-sub").textContent = formatDate(tx.created_at);
+          listEl.appendChild(row);
+        });
+
+        emptyEl.style.display = "none";
+        listEl.style.display = "flex";
+      } catch (e) {
+        // Leave the empty state in place — nice-to-have, not blocking.
+      }
+    })();
+
+    const hour = new Date().getHours();
+    const greeting =
+      hour < 12 ? "Good morning," : hour < 18 ? "Good afternoon," : "Good evening,";
+    document.getElementById("greetingLabel").textContent = greeting;
+
+    document.getElementById("logoutBtn").addEventListener("click", function () {
+      window.ZolvaAuth.logout().then(function () {
+        window.location.href = "login.html";
+      });
+    });
+
+    // Reveal the page now that we've confirmed a real, valid session.
+    document.body.classList.add("auth-ready");
+  })();
+</script>
+</body>
+</html>

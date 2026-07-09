@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Withdraw — ZolvaPay</title>
+<meta name="description" content="Withdraw from your ZolvaPay wallet to a bank account.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/auth.js"></script>
+<script>
+  (function () {
+    if (!window.ZolvaAuth || !window.ZolvaAuth.getToken()) {
+      window.location.href = "login.html";
+    }
+  })();
+</script>
+<style>
+  body { background: var(--surface); opacity: 0; transition: opacity 0.15s ease; }
+  body.auth-ready { opacity: 1; }
+
+  .transfer-main { max-width: 560px; margin: 0 auto; padding: 36px 24px 60px; }
+  .transfer-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 20px; }
+  .transfer-back:hover { color: var(--navy); }
+  .transfer-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 36px; }
+  .transfer-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .transfer-header p { font-size: 14px; color: var(--muted); margin-bottom: 26px; }
+  .transfer-balance-note { font-size: 12px; color: var(--muted); margin-top: -14px; margin-bottom: 22px; }
+
+  .transfer-locked, .transfer-success { text-align: center; padding: 20px 8px 8px; display: none; }
+  .transfer-locked-icon, .transfer-success-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 18px; }
+  .transfer-locked-icon { background: rgba(230, 160, 30, 0.12); color: #C6890F; }
+  .transfer-success-icon { background: rgba(20, 155, 126, 0.12); color: var(--teal); }
+  .transfer-locked-title, .transfer-success-title { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--navy); margin-bottom: 8px; }
+  .transfer-locked-sub, .transfer-success-sub { font-size: 14px; color: var(--muted); max-width: 380px; margin: 0 auto 22px; }
+  .transfer-success-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px 14px; font-family: var(--font-body); font-size: 15px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(20, 155, 126, 0.15); }
+  .form-group input.input-error, .form-group select.input-error { border-color: #D9483B; }
+
+  .amount-group { display: flex; gap: 10px; }
+  .amount-group .form-group { flex: 1; margin-bottom: 0; }
+  .amount-group select { width: 100px; flex: 0 0 100px; }
+
+  .field-error { display: none; font-size: 12px; color: #D9483B; margin-top: 6px; }
+  .field-error.visible { display: block; }
+  .btn-block { width: 100%; }
+
+  .transfer-alert {
+    display: none; background: rgba(217, 72, 59, 0.08); border: 1px solid rgba(217, 72, 59, 0.25);
+    color: #D9483B; font-size: 13px; font-weight: 500; padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 20px;
+  }
+  .transfer-alert.visible { display: block; }
+
+  .form-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0 18px; }
+  .form-section-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 14px; }
+
+  @media (max-width: 480px) {
+    .transfer-card { padding: 28px 22px; }
+    .amount-group { flex-direction: column; }
+    .amount-group select { width: 100%; flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home">
+      <img src="images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img">
+    </a>
+  </div>
+</header>
+
+<main class="transfer-main">
+  <a href="dashboard.html" class="transfer-back">&larr; Back to dashboard</a>
+
+  <div class="transfer-card">
+
+    <div id="withdrawLocked" class="transfer-locked">
+      <div class="transfer-locked-icon"><i class="fa-solid fa-id-card"></i></div>
+      <p class="transfer-locked-title">Verify your identity first</p>
+      <p class="transfer-locked-sub">Complete Tier 1 verification to withdraw funds.</p>
+      <a href="verify-identity.html" class="btn btn-primary">Verify now</a>
+    </div>
+
+    <div id="withdrawFormWrap">
+      <div class="transfer-header">
+        <h1>Withdraw</h1>
+        <p>Send money from your wallet to a bank account.</p>
+      </div>
+
+      <p class="transfer-balance-note" id="withdrawBalanceNote"></p>
+
+      <div class="transfer-alert" id="withdrawAlert" role="alert"></div>
+
+      <form id="withdrawForm" novalidate>
+        <div class="amount-group">
+          <div class="form-group">
+            <label for="withdrawAmount">Amount</label>
+            <input type="number" id="withdrawAmount" name="withdrawAmount" placeholder="0.00" step="0.01" min="0.01" required>
+            <p class="field-error" id="withdrawAmountError">Enter a valid amount.</p>
+          </div>
+          <div class="form-group">
+            <label for="withdrawCurrency">Currency</label>
+            <select id="withdrawCurrency" name="withdrawCurrency" required>
+              <option value="">--</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="form-divider">
+        <p class="form-section-label">Bank account</p>
+
+        <div class="form-group">
+          <label for="accountName">Account holder name</label>
+          <input type="text" id="accountName" name="accountName" placeholder="As it appears on the account" required>
+          <p class="field-error" id="accountNameError">Enter the account holder's name.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="accountNumber">Account number</label>
+          <input type="text" id="accountNumber" name="accountNumber" placeholder="0123456789" required>
+          <p class="field-error" id="accountNumberError">Enter a valid account number.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="bankCode">Bank code</label>
+          <input type="text" id="bankCode" name="bankCode" placeholder="e.g. 044" required>
+          <p class="field-error" id="bankCodeError">Enter your bank's code.</p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="withdrawSubmit">Withdraw</button>
+      </form>
+    </div>
+
+    <div id="withdrawSuccess" class="transfer-success">
+      <div class="transfer-success-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <p class="transfer-success-title" id="withdrawSuccessTitle">Withdrawal submitted</p>
+      <p class="transfer-success-sub" id="withdrawSuccessSub"></p>
+      <div class="transfer-success-actions">
+        <a href="dashboard.html" class="btn btn-ghost">Back to dashboard</a>
+        <button type="button" class="btn btn-primary" id="withdrawAnotherBtn">Withdraw again</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="js/main.js"></script>
+<script src="js/withdraw.js"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savings — ZolvaPay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/auth.js"></script>
+<script>
+  (function () {
+    if (!window.ZolvaAuth || !window.ZolvaAuth.getToken()) { window.location.href = "login.html"; }
+  })();
+</script>
+<style>
+  body { background: var(--surface); opacity: 0; transition: opacity 0.15s ease; }
+  body.auth-ready { opacity: 1; }
+  .cards-main { max-width: 640px; margin: 0 auto; padding: 36px 24px 60px; }
+  .cards-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 20px; }
+  .cards-back:hover { color: var(--navy); }
+  .cards-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; gap: 12px; }
+  .cards-header h1 { font-size: 24px; font-weight: 700; }
+
+  .transfer-locked { text-align: center; padding: 40px 8px; display: none; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .transfer-locked-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(230, 160, 30, 0.12); color: #C6890F; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 18px; }
+  .transfer-locked-title { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--navy); margin-bottom: 8px; }
+  .transfer-locked-sub { font-size: 14px; color: var(--muted); max-width: 380px; margin: 0 auto 22px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); display: none; }
+  .empty-state-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-alt); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px; }
+  .empty-state p { font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+
+  .goal-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 20px; margin-bottom: 16px; }
+  .goal-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .goal-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--navy); }
+  .goal-status { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 9px; border-radius: 20px; background: var(--surface); color: var(--muted); }
+  .goal-amount { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .goal-target { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .goal-bar-track { height: 8px; border-radius: 4px; background: var(--surface); overflow: hidden; margin-bottom: 16px; }
+  .goal-bar-fill { height: 100%; background: var(--teal); border-radius: 4px; }
+  .goal-actions { display: flex; gap: 8px; }
+  .goal-action-btn { flex: 1; padding: 9px 10px; font-size: 13px; font-weight: 600; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--white); color: var(--navy); cursor: pointer; }
+  .goal-action-btn:hover { background: var(--surface); }
+  .goal-inline-form { display: none; gap: 8px; margin-top: 10px; }
+  .goal-inline-form.visible { display: flex; }
+  .goal-inline-form input { flex: 1; padding: 9px 12px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .goal-inline-form button { padding: 9px 14px; font-size: 13px; font-weight: 600; border-radius: var(--radius-sm); border: none; background: var(--teal); color: #fff; cursor: pointer; }
+
+  .create-form-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 28px; margin-bottom: 20px; display: none; }
+  .create-form-card.visible { display: block; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .form-group input, .form-group select { width: 100%; padding: 12px 14px; font-family: var(--font-body); font-size: 15px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .transfer-alert { display: none; background: rgba(217, 72, 59, 0.08); border: 1px solid rgba(217, 72, 59, 0.25); color: #D9483B; font-size: 13px; font-weight: 500; padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; }
+  .transfer-alert.visible { display: block; }
+  .issue-btn-row { display: flex; gap: 8px; }
+  .issue-btn-row .btn-ghost { flex: 0 0 auto; }
+  .issue-btn-row .btn-primary { flex: 1; }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home"><img src="images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img"></a>
+  </div>
+</header>
+
+<main class="cards-main">
+  <a href="dashboard.html" class="cards-back">&larr; Back to dashboard</a>
+
+  <div id="savingsLocked" class="transfer-locked">
+    <div class="transfer-locked-icon"><i class="fa-solid fa-id-card"></i></div>
+    <p class="transfer-locked-title">Verify your identity first</p>
+    <p class="transfer-locked-sub">Complete Tier 1 verification to open a savings goal.</p>
+    <a href="verify-identity.html" class="btn btn-primary">Verify now</a>
+  </div>
+
+  <div id="savingsContent" style="display:none;">
+    <div class="cards-header">
+      <h1>Savings</h1>
+      <button type="button" class="btn btn-primary" id="showCreateFormBtn"><i class="fa-solid fa-plus"></i> New goal</button>
+    </div>
+
+    <div class="create-form-card" id="createFormCard">
+      <div class="transfer-alert" id="createAlert" role="alert"></div>
+      <form id="createForm" novalidate>
+        <div class="form-group">
+          <label for="goalName">Goal name</label>
+          <input type="text" id="goalName" placeholder="e.g. Emergency fund" required>
+        </div>
+        <div class="form-group">
+          <label for="goalCurrency">Currency</label>
+          <select id="goalCurrency" required><option value="">--</option></select>
+        </div>
+        <div class="form-group">
+          <label for="goalTarget">Target amount (optional)</label>
+          <input type="number" id="goalTarget" step="0.01" min="0.01" placeholder="Leave blank for open-ended">
+        </div>
+        <div class="issue-btn-row">
+          <button type="button" class="btn btn-ghost" id="cancelCreateBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="createSubmitBtn">Create goal</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+      <p>You don't have any savings goals yet.</p>
+      <button type="button" class="btn btn-primary" id="emptyCreateBtn">Create your first goal</button>
+    </div>
+
+    <div id="goalsList"></div>
+  </div>
+</main>
+
+<script src="js/main.js"></script>
+<script src="js/savings.js"></script>
+</body>
+</html>

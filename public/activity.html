@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activity — ZolvaPay</title>
+<meta name="description" content="Your ZolvaPay transaction history.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/auth.js"></script>
+<script>
+  (function () {
+    if (!window.ZolvaAuth || !window.ZolvaAuth.getToken()) {
+      window.location.href = "login.html";
+    }
+  })();
+</script>
+<style>
+  body {
+    background: var(--surface);
+    padding-bottom: 40px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  body.auth-ready { opacity: 1; }
+
+  .activity-main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 20px 40px;
+  }
+
+  .activity-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .activity-back:hover { color: var(--navy); }
+
+  .activity-title { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--navy); margin-bottom: 20px; }
+
+  .tx-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .tx-row {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .tx-row-icon {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .tx-row-icon.in { background: rgba(20, 155, 126, 0.12); color: var(--teal); }
+  .tx-row-icon.out { background: rgba(230, 160, 30, 0.12); color: #C6890F; }
+
+  .tx-row-body { flex: 1; min-width: 0; }
+  .tx-row-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .tx-row-sub { font-size: 12px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .tx-row-amount { font-family: var(--font-display); font-weight: 700; font-size: 14px; text-align: right; flex-shrink: 0; }
+  .tx-row-amount.in { color: var(--teal); }
+  .tx-row-amount.out { color: var(--navy); }
+
+  /* ---------- Empty / loading / error states ---------- */
+  .tx-state-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .tx-state-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    color: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin: 0 auto 16px;
+  }
+  .tx-state-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--navy); margin-bottom: 6px; }
+  .tx-state-sub { font-size: 13px; color: var(--muted); max-width: 320px; margin: 0 auto 20px; }
+
+  .load-more-wrap { text-align: center; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home">
+      <img src="images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img">
+    </a>
+  </div>
+</header>
+
+<main class="activity-main">
+  <a href="dashboard.html" class="activity-back">&larr; Back to dashboard</a>
+  <h1 class="activity-title">Activity</h1>
+
+  <div id="activityLoading" class="tx-state-card">
+    <div class="tx-state-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+    <p class="tx-state-title">Loading your activity&hellip;</p>
+  </div>
+
+  <div id="activityEmpty" class="tx-state-card" style="display:none;">
+    <div class="tx-state-icon"><i class="fa-solid fa-receipt"></i></div>
+    <p class="tx-state-title">No transactions yet</p>
+    <p class="tx-state-sub">Once you send, receive, or convert money, your activity will show up here.</p>
+    <a href="transfer.html" class="btn btn-primary">Make your first transfer</a>
+  </div>
+
+  <div id="activityError" class="tx-state-card" style="display:none;">
+    <div class="tx-state-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <p class="tx-state-title">Couldn't load your activity</p>
+    <p class="tx-state-sub">Check your connection and try again.</p>
+  </div>
+
+  <div class="tx-list" id="txList"></div>
+
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
+    <button type="button" class="btn btn-ghost" id="loadMoreBtn">Load more</button>
+  </div>
+</main>
+
+<script src="js/main.js"></script>
+<script src="js/activity.js"></script>
+</body>
+</html>

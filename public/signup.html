@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open an account — ZolvaPay</title>
+<meta name="description" content="Open a free ZolvaPay account to hold, send, and convert money across currencies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* ---------- Auth pages (login/signup) — scoped additions ---------- */
+  .auth-main {
+    min-height: calc(100vh - 73px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 40px 36px;
+  }
+
+  .auth-header { text-align: center; margin-bottom: 32px; }
+  .auth-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .auth-header p {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(20, 155, 126, 0.15);
+  }
+  .form-group input.input-error,
+  .form-group select.input-error { border-color: #D9483B; }
+
+  .field-error {
+    display: none;
+    font-size: 12px;
+    color: #D9483B;
+    margin-top: 6px;
+  }
+  .field-error.visible { display: block; }
+
+  .terms-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 22px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .terms-row input { width: auto; margin-top: 3px; }
+  .terms-row a { color: var(--teal); font-weight: 600; }
+  .terms-row a:hover { color: var(--teal-light); }
+
+  .btn-block { width: 100%; }
+
+  .auth-alert {
+    display: none;
+    background: rgba(217, 72, 59, 0.08);
+    border: 1px solid rgba(217, 72, 59, 0.25);
+    color: #D9483B;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+  }
+  .auth-alert.visible { display: block; }
+
+  .auth-footer {
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 22px;
+  }
+  .auth-footer a { color: var(--teal); font-weight: 600; }
+  .auth-footer a:hover { color: var(--teal-light); }
+
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+    .auth-card { padding: 32px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home">
+      <img src="../images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img">
+    </a>
+    <div class="navbar-actions">
+   
+      <a href="login.html" class="btn btn-ghost">Log in</a>
+    </div>
+  </div>
+</header>
+
+<main class="auth-main">
+  <div class="auth-card">
+
+    <div class="auth-header">
+      <h1>Create your account</h1>
+      <p>Hold, send, and convert money across currencies.</p>
+    </div>
+
+    <div class="auth-alert" id="formAlert" role="alert"></div>
+
+    <form id="signupForm" novalidate>
+
+      <div class="form-group">
+        <label for="fullName">Full name</label>
+        <input type="text" id="fullName" name="fullName" placeholder="Alex Wilson" autocomplete="name" required>
+        <p class="field-error" id="fullNameError">Enter your full name.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="signupEmail">Email address</label>
+        <input type="email" id="signupEmail" name="signupEmail" placeholder="you@example.com" autocomplete="email" required>
+        <p class="field-error" id="signupEmailError">Enter a valid email address.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="country">Country</label>
+        <select id="country" name="country" required>
+          <option value="" disabled selected>Select your country</option>
+          <option value="NG">Nigeria</option>
+          <option value="GH">Ghana</option>
+          <option value="KE">Kenya</option>
+          <option value="ZA">South Africa</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+        </select>
+        <p class="field-error" id="countryError">Select your country.</p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" name="signupPassword" placeholder="At least 8 characters" autocomplete="new-password" required>
+          <p class="field-error" id="signupPasswordError">Minimum 8 characters.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm password</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter password" autocomplete="new-password" required>
+          <p class="field-error" id="confirmPasswordError">Passwords don't match.</p>
+        </div>
+      </div>
+
+      <div class="terms-row">
+        <input type="checkbox" id="termsCheckbox" name="termsCheckbox" required>
+        <label for="termsCheckbox">
+          I agree to ZolvaPay's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" id="signupSubmit">Create account</button>
+    </form>
+
+    <p class="auth-footer">
+      Already have an account? <a href="login.html">Log in</a>
+    </p>
+
+  </div>
+</main>
+
+<script src="js/main.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

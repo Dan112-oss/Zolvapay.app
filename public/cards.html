@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cards — ZolvaPay</title>
+<meta name="description" content="Manage your ZolvaPay virtual cards.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/auth.js"></script>
+<script>
+  (function () {
+    if (!window.ZolvaAuth || !window.ZolvaAuth.getToken()) {
+      window.location.href = "login.html";
+    }
+  })();
+</script>
+<style>
+  body { background: var(--surface); opacity: 0; transition: opacity 0.15s ease; }
+  body.auth-ready { opacity: 1; }
+
+  .cards-main { max-width: 640px; margin: 0 auto; padding: 36px 24px 60px; }
+  .cards-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 20px; }
+  .cards-back:hover { color: var(--navy); }
+
+  .cards-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; gap: 12px; }
+  .cards-header h1 { font-size: 24px; font-weight: 700; }
+
+  .transfer-locked { text-align: center; padding: 40px 8px; display: none; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .transfer-locked-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(230, 160, 30, 0.12); color: #C6890F; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 18px; }
+  .transfer-locked-title { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--navy); margin-bottom: 8px; }
+  .transfer-locked-sub { font-size: 14px; color: var(--muted); max-width: 380px; margin: 0 auto 22px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); display: none; }
+  .empty-state-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-alt); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px; }
+  .empty-state p { font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+
+  .card-tile {
+    background: linear-gradient(135deg, var(--navy), #1E2A52);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-card);
+  }
+  .card-tile.frozen { opacity: 0.55; }
+  .card-tile-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
+  .card-tile-currency { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; opacity: 0.75; }
+  .card-tile-status {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 3px 9px; border-radius: 20px; background: rgba(255,255,255,0.15);
+  }
+  .card-tile-pan { font-family: var(--font-display); font-size: 19px; letter-spacing: 0.06em; margin-bottom: 16px; }
+  .card-tile-bottom { display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; opacity: 0.85; }
+  .card-tile-name { text-transform: uppercase; }
+  .card-tile-expiry { font-family: var(--font-display); }
+
+  .card-actions { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+  .card-action-btn {
+    flex: 1; min-width: 100px; padding: 10px 12px; font-size: 13px; font-weight: 600;
+    border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--white);
+    color: var(--navy); cursor: pointer; text-align: center;
+  }
+  .card-action-btn:hover { background: var(--surface); }
+  .card-action-btn.danger { color: #D9483B; border-color: rgba(217, 72, 59, 0.3); }
+
+  .reveal-box {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin: -14px 0 20px;
+    font-family: var(--font-display);
+    font-size: 15px;
+  }
+  .reveal-box.visible { display: block; }
+  .reveal-row { display: flex; justify-content: space-between; padding: 3px 0; }
+  .reveal-warning { font-size: 11px; color: var(--muted); font-family: var(--font-body); margin-top: 8px; }
+
+  .limit-row { display: flex; gap: 8px; margin: -14px 0 20px; }
+  .limit-row input {
+    flex: 1; padding: 10px 12px; font-size: 14px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-family: var(--font-body);
+  }
+  .limit-row button {
+    padding: 10px 14px; font-size: 13px; font-weight: 600; border-radius: var(--radius-sm);
+    border: none; background: var(--teal); color: #fff; cursor: pointer;
+  }
+  .limit-row { display: none; }
+  .limit-row.visible { display: flex; }
+
+  /* Issue-card form */
+  .issue-form-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card); padding: 28px; margin-bottom: 20px; display: none;
+  }
+  .issue-form-card.visible { display: block; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px 14px; font-family: var(--font-body); font-size: 15px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .transfer-alert {
+    display: none; background: rgba(217, 72, 59, 0.08); border: 1px solid rgba(217, 72, 59, 0.25);
+    color: #D9483B; font-size: 13px; font-weight: 500; padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 16px;
+  }
+  .transfer-alert.visible { display: block; }
+  .btn-block { width: 100%; }
+  .issue-btn-row { display: flex; gap: 8px; }
+  .issue-btn-row .btn-ghost { flex: 0 0 auto; }
+  .issue-btn-row .btn-primary { flex: 1; }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home">
+      <img src="images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img">
+    </a>
+  </div>
+</header>
+
+<main class="cards-main">
+  <a href="dashboard.html" class="cards-back">&larr; Back to dashboard</a>
+
+  <div id="cardsLocked" class="transfer-locked">
+    <div class="transfer-locked-icon"><i class="fa-solid fa-id-card"></i></div>
+    <p class="transfer-locked-title">Verify your identity first</p>
+    <p class="transfer-locked-sub">Complete Tier 1 verification to issue a card.</p>
+    <a href="verify-identity.html" class="btn btn-primary">Verify now</a>
+  </div>
+
+  <div id="cardsContent" style="display:none;">
+    <div class="cards-header">
+      <h1>My cards</h1>
+      <button type="button" class="btn btn-primary" id="showIssueFormBtn">
+        <i class="fa-solid fa-plus"></i> New card
+      </button>
+    </div>
+
+    <div class="issue-form-card" id="issueFormCard">
+      <div class="transfer-alert" id="issueAlert" role="alert"></div>
+      <form id="issueForm" novalidate>
+        <div class="form-group">
+          <label for="issueCurrency">Currency</label>
+          <select id="issueCurrency" name="issueCurrency" required>
+            <option value="">--</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cardholderName">Cardholder name</label>
+          <input type="text" id="cardholderName" name="cardholderName" placeholder="Defaults to your account name">
+        </div>
+        <div class="issue-btn-row">
+          <button type="button" class="btn btn-ghost" id="cancelIssueBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="issueSubmitBtn">Issue card</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon"><i class="fa-solid fa-credit-card"></i></div>
+      <p>You don't have any cards yet.</p>
+      <button type="button" class="btn btn-primary" id="emptyIssueBtn">Issue your first card</button>
+    </div>
+
+    <div id="cardsList"></div>
+  </div>
+</main>
+
+<script src="js/main.js"></script>
+<script src="js/cards.js"></script>
+</body>
+</html>

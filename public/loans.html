@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loans — ZolvaPay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/auth.js"></script>
+<script>
+  (function () {
+    if (!window.ZolvaAuth || !window.ZolvaAuth.getToken()) { window.location.href = "login.html"; }
+  })();
+</script>
+<style>
+  body { background: var(--surface); opacity: 0; transition: opacity 0.15s ease; }
+  body.auth-ready { opacity: 1; }
+  .cards-main { max-width: 640px; margin: 0 auto; padding: 36px 24px 60px; }
+  .cards-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 20px; }
+  .cards-back:hover { color: var(--navy); }
+  .cards-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; gap: 12px; }
+  .cards-header h1 { font-size: 24px; font-weight: 700; }
+
+  .empty-state { text-align: center; padding: 40px 20px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); display: none; }
+  .empty-state-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-alt); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px; }
+  .empty-state p { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+
+  .loan-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 20px; margin-bottom: 16px; }
+  .loan-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .loan-status { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 9px; border-radius: 20px; background: var(--surface); color: var(--muted); }
+  .loan-status.active { background: rgba(20, 155, 126, 0.12); color: var(--teal); }
+  .loan-status.rejected { background: rgba(217, 72, 59, 0.1); color: #D9483B; }
+  .loan-status.repaid { background: rgba(91, 46, 255, 0.1); color: var(--navy); }
+  .loan-amount { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .loan-detail { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .loan-reason { font-size: 13px; color: #D9483B; margin-top: 8px; }
+  .loan-inline-form { display: none; gap: 8px; margin-top: 12px; }
+  .loan-inline-form.visible { display: flex; }
+  .loan-inline-form input { flex: 1; padding: 9px 12px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .loan-inline-form button { padding: 9px 14px; font-size: 13px; font-weight: 600; border-radius: var(--radius-sm); border: none; background: var(--teal); color: #fff; cursor: pointer; }
+  .loan-action-btn { margin-top: 12px; width: 100%; padding: 9px 10px; font-size: 13px; font-weight: 600; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--white); color: var(--navy); cursor: pointer; }
+  .loan-action-btn:hover { background: var(--surface); }
+
+  .apply-form-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 28px; margin-bottom: 20px; display: none; }
+  .apply-form-card.visible { display: block; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .form-group input, .form-group select { width: 100%; padding: 12px 14px; font-family: var(--font-body); font-size: 15px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .transfer-alert { display: none; background: rgba(217, 72, 59, 0.08); border: 1px solid rgba(217, 72, 59, 0.25); color: #D9483B; font-size: 13px; font-weight: 500; padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; }
+  .transfer-alert.visible { display: block; }
+  .apply-note { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .issue-btn-row { display: flex; gap: 8px; }
+  .issue-btn-row .btn-ghost { flex: 0 0 auto; }
+  .issue-btn-row .btn-primary { flex: 1; }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo" aria-label="ZolvaPay home"><img src="images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img"></a>
+  </div>
+</header>
+
+<main class="cards-main">
+  <a href="dashboard.html" class="cards-back">&larr; Back to dashboard</a>
+
+  <div class="cards-header">
+    <h1>Loans</h1>
+    <button type="button" class="btn btn-primary" id="showApplyFormBtn"><i class="fa-solid fa-plus"></i> Apply</button>
+  </div>
+
+  <div class="apply-form-card" id="applyFormCard">
+    <p class="apply-note">Eligibility and amount are based on your account history — approval isn't guaranteed.</p>
+    <div class="transfer-alert" id="applyAlert" role="alert"></div>
+    <form id="applyForm" novalidate>
+      <div class="form-group">
+        <label for="loanAmount">Requested amount</label>
+        <input type="number" id="loanAmount" step="0.01" min="0.01" placeholder="0.00" required>
+      </div>
+      <div class="form-group">
+        <label for="loanCurrency">Currency</label>
+        <select id="loanCurrency" required><option value="">--</option></select>
+      </div>
+      <div class="issue-btn-row">
+        <button type="button" class="btn btn-ghost" id="cancelApplyBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="applySubmitBtn">Apply</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="empty-state-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+    <p>You don't have any loan applications yet.</p>
+  </div>
+
+  <div id="loansList"></div>
+</main>
+
+<script src="js/main.js"></script>
+<script src="js/loans.js"></script>
+</body>
+</html>
