@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KYC queue — ZolvaPay Admin</title>
+<meta name="description" content="Review and action pending KYC submissions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/auth.js"></script>
+<script>
+  (function () {
+    if (!window.ZolvaAuth || !window.ZolvaAuth.getToken()) {
+      window.location.href = "../login.html";
+    }
+  })();
+</script>
+<style>
+  body {
+    background: var(--surface);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  body.auth-ready { opacity: 1; }
+
+  .admin-main { max-width: 920px; margin: 0 auto; padding: 32px 24px 60px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .admin-header h1 { font-size: 22px; font-weight: 700; }
+  .admin-header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .admin-denied {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .queue-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  .queue-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .queue-row {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+  }
+  .queue-row-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .queue-user-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--navy); }
+  .queue-user-email { font-size: 13px; color: var(--muted); }
+  .queue-meta { font-size: 12px; color: var(--muted); text-align: right; }
+  .queue-doc-type {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--teal);
+    background: rgba(20, 155, 126, 0.1);
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-top: 4px;
+  }
+
+  .queue-doc-links { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .doc-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  .doc-link:hover { background: var(--border); }
+
+  .queue-actions { display: flex; gap: 10px; }
+  .queue-actions .btn { flex: 1; }
+  .btn-reject { background: var(--white); border: 1px solid #D9483B; color: #D9483B; }
+  .btn-reject:hover { background: rgba(217, 72, 59, 0.06); }
+
+  .reject-reason-row { display: none; margin-top: 12px; gap: 8px; }
+  .reject-reason-row.visible { display: flex; }
+  .reject-reason-row input {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .queue-row.processed { opacity: 0.5; pointer-events: none; }
+
+  @media (max-width: 560px) {
+    .queue-row-top { flex-direction: column; }
+    .queue-meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="../dashboard.html" class="logo" aria-label="ZolvaPay home">
+      <img src="../images/zolvapay-mark.png" alt="ZolvaPay" class="logo-img">
+    </a>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1>KYC approval queue</h1>
+      <p id="queueCount">Loading&hellip;</p>
+    </div>
+  </div>
+
+  <div class="admin-denied" id="adminDenied">
+    <p>This page is for admins only.</p>
+    <a href="../dashboard.html" class="btn btn-primary" style="margin-top:12px;">Back to dashboard</a>
+  </div>
+
+  <div id="queueEmpty" class="queue-empty" style="display:none;">Nothing pending review right now.</div>
+
+  <div class="queue-list" id="queueList"></div>
+</main>
+
+<script src="../js/main.js"></script>
+<script src="../js/admin-kyc.js"></script>
+</body>
+</html>
