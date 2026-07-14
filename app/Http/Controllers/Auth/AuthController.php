@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WalletBalance;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -54,7 +55,21 @@ class AuthController extends Controller
             // Every user gets exactly one wallet, created in the same
             // transaction as the user row so we never end up with a
             // walletless account.
-            Wallet::create(['user_id' => $user->id]);
+            $wallet = Wallet::create(['user_id' => $user->id]);
+
+            // Give the wallet a zero-balance row in the currency matching
+            // the user's country, so the dashboard/Convert/Cards screens
+            // have something to show instead of "no balance yet" — a
+            // brand-new wallet is otherwise indistinguishable from one
+            // with zero currency support at all. A zero-balance row needs
+            // no ledger entry (nothing has happened yet), so this stays
+            // consistent with wallet_balances being a cache of the ledger.
+            WalletBalance::create([
+                'wallet_id' => $wallet->id,
+                'currency_code' => self::defaultCurrencyForCountry($validated['country_code']),
+                'available_balance' => 0,
+                'ledger_balance' => 0,
+            ]);
 
             return $user;
         });
@@ -65,6 +80,31 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $token,
         ], 201);
+    }
+
+    /**
+     * Maps a signup country to the currency a new wallet should start
+     * with. Keep in sync with config('fx.supported_currencies') — this
+     * only ever returns a currency from that list, falling back to USD
+     * for any country not explicitly mapped (the user can still add/hold
+     * any supported currency later via Fund/Convert regardless of this
+     * starting choice).
+     */
+    private static function defaultCurrencyForCountry(string $countryCode): string
+    {
+        static $map = [
+            'NG' => 'NGN',
+            'KE' => 'KES',
+            'GB' => 'GBP',
+            // EU member states that use the euro.
+            'AT' => 'EUR', 'BE' => 'EUR', 'CY' => 'EUR', 'EE' => 'EUR',
+            'FI' => 'EUR', 'FR' => 'EUR', 'DE' => 'EUR', 'GR' => 'EUR',
+            'IE' => 'EUR', 'IT' => 'EUR', 'LV' => 'EUR', 'LT' => 'EUR',
+            'LU' => 'EUR', 'MT' => 'EUR', 'NL' => 'EUR', 'PT' => 'EUR',
+            'SK' => 'EUR', 'SI' => 'EUR', 'ES' => 'EUR', 'HR' => 'EUR',
+        ];
+
+        return $map[strtoupper($countryCode)] ?? 'USD';
     }
 
     /**
